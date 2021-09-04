@@ -160,6 +160,7 @@ new Promise((resolve, reject) => {
                     return item.val.print();
                 })
             );
+
             // resolving with nothing since we are done
             resolve();
         });
