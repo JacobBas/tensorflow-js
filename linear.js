@@ -2,9 +2,9 @@
 new Promise((resolve) => {
     // creating the data
     let data = [];
-    for (let i = 0; i < 3.5; i += 0.01) {
+    for (let i = 0; i < 4; i += 0.04) {
         let sign = (-1) ** Math.round(Math.random());
-        let noise = Math.min(Math.random() / Math.random(), 3) * sign;
+        let noise = Math.min(Math.random() / Math.random(), 20) * sign;
         let y = Math.exp(i) + noise;
         data.push({
             x: i,
@@ -40,10 +40,12 @@ new Promise((resolve) => {
         const f = (x) => {
             return x.mul(slope).add(intercept);
         };
+
         // creating the loss function
         const mse = (y_hat, y) => {
             return y_hat.sub(y).square().mean();
         };
+
         // setting the learning rate
         const learnRate = 0.1;
         // setting the descent optimizer
@@ -51,7 +53,7 @@ new Promise((resolve) => {
 
         // training the model
         let errors = [];
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 150; i++) {
             optimizer.minimize(() => {
                 error = mse(f(tensors.x), tensors.y);
                 errors.push(error.dataSync());
@@ -84,8 +86,7 @@ new Promise((resolve) => {
             .scaleLinear()
             .domain([0, d3.max(final.x, (d) => d)])
             .range([0, 750]);
-        let x_axis = svg
-            .append("g")
+        svg.append("g")
             .attr("transform", `translate(40, ${500 - 40})`)
             .call(
                 d3
@@ -99,8 +100,7 @@ new Promise((resolve) => {
             .scaleLinear()
             .domain([d3.max(final.y, (d) => d), 0])
             .range([0, 500 - 50]);
-        let y_axis = svg
-            .append("g")
+        svg.append("g")
             .attr("transform", `translate(40, 10)`)
             .call(
                 d3
@@ -124,7 +124,7 @@ new Promise((resolve) => {
         // plotiting the fitted points
         svg.append("g")
             .attr("stroke", "orange")
-            .attr("stroke-width", 1.5)
+            .attr("stroke-width", 3)
             .attr("fill", "none")
             .selectAll("cirlce")
             .data(plot_data)
