@@ -43,21 +43,121 @@ const Page = () => {
         [1, 1],
         [1, 1],
     ]);
+    const [solvedMessage, setSolvedMessage] = _Hooks.useState("");
+
+    // handler functions
+    const solveRels = () => {
+        new Promise((resolve) => {
+            // creating the system of equations to solve
+            // we want to create something with 3 equations and 3 unknowns
+            // ax + by + cz = d
+            let baseRate = tf.tensor(
+                [
+                    lossCost[0][0] + lossCost[0][1],
+                    lossCost[1][0] + lossCost[1][1],
+                    lossCost[0][0] + lossCost[1][0],
+                    lossCost[0][1] + lossCost[1][1],
+                ],
+                [4, 1]
+            );
+            let male_urban = tf.tensor([lossCost[0][0], 0, 0, 0], [4, 1]);
+            let male_rural = tf.tensor([lossCost[0][0], 0, 0, 0], [4, 1]);
+            let female_urban = tf.tensor([0, lossCost[0][0], 0, 0], [4, 1]);
+            let female_rural = tf.tensor([0, lossCost[0][0], 0, 0], [4, 1]);
+            let urban_male = tf.tensor([0, 0, lossCost[0][0], 0], [4, 1]);
+            let urban_female = tf.tensor([0, 0, lossCost[0][0], 0], [4, 1]);
+            let rural_male = tf.tensor([0, 0, 0, lossCost[0][0]], [4, 1]);
+            let rural_female = tf.tensor([0, 0, 0, lossCost[0][0]], [4, 1]);
+
+            // creating the variables that we want to solve for and
+            // setting the starting values for them
+            let male_rel = tf.variable(tf.tensor([currentRels.male]));
+            let female_rel = tf.variable(tf.tensor([currentRels.female]));
+            let urban_rel = tf.variable(tf.tensor([currentRels.urban]));
+            let rural_rel = tf.variable(tf.tensor([currentRels.rural]));
+
+            // creating the function from the tensors
+            function func() {
+                let item1 = male_urban.mul(male_rel).mul(urban_rel);
+                let item2 = male_rural.mul(male_rel).mul(rural_rel);
+                let item3 = female_urban.mul(female_rel).mul(urban_rel);
+                let item4 = female_rural.mul(female_rel).mul(rural_rel);
+                let item5 = urban_male.mul(male_rel).mul(urban_rel);
+                let item6 = urban_female.mul(female_rel).mul(urban_rel);
+                let item7 = rural_male.mul(male_rel).mul(rural_rel);
+                let item8 = rural_female.mul(female_rel).mul(rural_rel);
+
+                return item1.add(item2).add(item3).add(item4).add(item5).add(item6).add(item7).add(item8);
+            }
+
+            // creating our loss optimizing function
+            const mse = (baseRate, baseRate_hat) => {
+                return baseRate_hat.sub(baseRate).square().mean();
+            };
+
+            // setting the learning rate and the optimization function
+            // we are going with the adam optimization function since it
+            // adaptively updates the learning rate which leads to slower
+            // iteration time, but better performance in the long
+            // run when we are trying to estimate the parameters; by using
+            // adam, we have a much better and more consitent time converging
+            // to the true values of the varibles
+            const learnRate = 0.1;
+            console.log(`learn rate: ${learnRate}`);
+            const optimizer = tf.train.adam(learnRate);
+
+            // running the gradient descent on the system
+            for (let i = 0; i < i + 2; i++) {
+                // initializing our error term and significance
+                let error_rounded;
+                let sigfigs = 10000;
+
+                // running the optimizer for our variables
+                optimizer.minimize(() => {
+                    let error = mse(baseRate, func());
+                    error_rounded = Math.round(error.dataSync()[0] * sigfigs) / sigfigs;
+                    return error;
+                });
+
+                // logging iteration milestones
+                if (i % 100 === 0) {
+                    console.log(`iterations: ${i}, error: ${error_rounded}`);
+                }
+
+                // breaking if our error is zero to a specific significance
+                // or the iteration count is 5000 iterations
+                if (error_rounded === 0 || !error_rounded || i === 5000) {
+                    let final_message = ``;
+                    final_message += `iterations:    ${i} \n`;
+                    final_message += `squared error: ${error_rounded} \n`;
+                    final_message += `male rel:      ${Math.round(1000 * male_rel.dataSync()) / 1000} \n`;
+                    final_message += `female rel:    ${Math.round(1000 * female_rel.dataSync()) / 1000} \n`;
+                    final_message += `urban rel:     ${Math.round(1000 * urban_rel.dataSync()) / 1000} \n`;
+                    final_message += `rural rel:     ${Math.round(1000 * rural_rel.dataSync()) / 1000} \n`;
+                    setSolvedMessage(final_message);
+                    break;
+                }
+            }
+
+            // resolving the promise
+            resolve();
+        });
+    };
 
     // reactive effects
     _Hooks.useEffect(() => {
         setLossCost([
             [
-                Math.round((100 * premium[0][0]) / exposure[0][0]) / 100,
-                Math.round((100 * premium[0][1]) / exposure[0][1]) / 100,
+                Math.round((100 * loss[0][0]) / exposure[0][0]) / 100,
+                Math.round((100 * loss[0][1]) / exposure[0][1]) / 100,
             ],
             [
-                Math.round((100 * premium[1][0]) / exposure[1][0]) / 100,
-                Math.round((100 * premium[1][1]) / exposure[1][1]) / 100,
+                Math.round((100 * loss[1][0]) / exposure[1][0]) / 100,
+                Math.round((100 * loss[1][1]) / exposure[1][1]) / 100,
             ],
         ]);
-    }, [premium, exposure]);
-    loss;
+    }, [loss, exposure]);
+
     _Hooks.useEffect(() => {
         setLossRatios([
             [
@@ -74,20 +174,12 @@ const Page = () => {
     _Hooks.useEffect(() => {
         setLossRatioRel([
             [
-                Math.round(
-                    (1000 * lossRatios[0][0]) / lossRatios[baseSeg[0]][baseSeg[1]]
-                ) / 1000,
-                Math.round(
-                    (1000 * lossRatios[0][1]) / lossRatios[baseSeg[0]][baseSeg[1]]
-                ) / 1000,
+                Math.round((1000 * lossRatios[0][0]) / lossRatios[baseSeg[0]][baseSeg[1]]) / 1000,
+                Math.round((1000 * lossRatios[0][1]) / lossRatios[baseSeg[0]][baseSeg[1]]) / 1000,
             ],
             [
-                Math.round(
-                    (1000 * lossRatios[1][0]) / lossRatios[baseSeg[0]][baseSeg[1]]
-                ) / 1000,
-                Math.round(
-                    (1000 * lossRatios[1][1]) / lossRatios[baseSeg[0]][baseSeg[1]]
-                ) / 1000,
+                Math.round((1000 * lossRatios[1][0]) / lossRatios[baseSeg[0]][baseSeg[1]]) / 1000,
+                Math.round((1000 * lossRatios[1][1]) / lossRatios[baseSeg[0]][baseSeg[1]]) / 1000,
             ],
         ]);
     }, [lossRatios, baseSeg]);
@@ -386,7 +478,7 @@ const Page = () => {
             <table class="matrix-table">
                 <thead>
                     <tr>
-                        <th colspan="3">Loss Cost Table</th>
+                        <th colspan="3">Loss Cost/Pure Premium Table</th>
                     </tr>
                     <tr>
                         <th></th>
@@ -457,6 +549,37 @@ const Page = () => {
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <div class="calculations">
+            <h2>Starting equations</h2>
+            <div class="function-container">
+                <p class="function">
+                    ${lossCost[0][0]} + ${lossCost[0][1]} = ${lossCost[0][0]} * (male * urban + male * rural) =
+                    ${lossCost[0][0]} * (${currentRels.male} * ${currentRels.urban} + ${currentRels.male} *
+                    ${currentRels.rural})
+                </p>
+                <p class="function">
+                    ${lossCost[1][0]} + ${lossCost[1][1]} = ${lossCost[0][0]} * (female * urban + female * rural) =
+                    ${lossCost[0][0]} * (${currentRels.female} * ${currentRels.urban} + ${currentRels.female} *
+                    ${currentRels.rural})
+                </p>
+                <p class="function">
+                    ${lossCost[0][0]} + ${lossCost[1][0]} = ${lossCost[0][0]} * (urban * male + urban * female) =
+                    ${lossCost[0][0]} * (${currentRels.urban} * ${currentRels.male} + ${currentRels.urban} *
+                    ${currentRels.female})
+                </p>
+                <p class="function">
+                    ${lossCost[0][1]} + ${lossCost[1][1]} = ${lossCost[0][0]} * (rural * male + rural * female) =
+                    ${lossCost[0][0]} * (${currentRels.rural} * ${currentRels.male} + ${currentRels.rural} *
+                    ${currentRels.female})
+                </p>
+            </div>
+
+            <div class="function-container" style=${{ marginTop: "2rem", paddingTop: "1rem" }}>
+                <button onClick=${solveRels}>Solve for relativities</button>
+                <pre class="function">${solvedMessage}</pre>
+            </div>
         </div>
     `;
 };
