@@ -13,12 +13,26 @@ export const Hooks = _Hooks;
 const Page = () => {
     // setting the state
     const [premium, setPremium] = _Hooks.useState([
-        [800, 1000],
-        [700, 400],
+        [8000, 10000],
+        [7000, 4000],
+    ]);
+    const [exposure, setExposure] = _Hooks.useState([
+        [10, 20],
+        [10, 10],
     ]);
     const [loss, setLoss] = _Hooks.useState([
-        [900, 1000],
-        [400, 300],
+        [9000, 10000],
+        [4000, 3000],
+    ]);
+    const [currentRels, setCurrentRels] = _Hooks.useState({
+        male: 1.0,
+        female: 0.5,
+        urban: 1.0,
+        rural: 1.25,
+    });
+    const [lossCost, setLossCost] = _Hooks.useState([
+        [1, 1],
+        [1, 1],
     ]);
     const [lossRatios, setLossRatios] = _Hooks.useState([
         [1, 1],
@@ -31,6 +45,19 @@ const Page = () => {
     ]);
 
     // reactive effects
+    _Hooks.useEffect(() => {
+        setLossCost([
+            [
+                Math.round((100 * premium[0][0]) / exposure[0][0]) / 100,
+                Math.round((100 * premium[0][1]) / exposure[0][1]) / 100,
+            ],
+            [
+                Math.round((100 * premium[1][0]) / exposure[1][0]) / 100,
+                Math.round((100 * premium[1][1]) / exposure[1][1]) / 100,
+            ],
+        ]);
+    }, [premium, exposure]);
+    loss;
     _Hooks.useEffect(() => {
         setLossRatios([
             [
@@ -69,193 +96,368 @@ const Page = () => {
     return html`
         <h1>Minimum Biased Procedure</h1>
 
-        <table>
-            <thead>
-                <tr>
-                    <th colspan="3">Premium Table</th>
-                </tr>
-                <tr>
-                    <th></th>
-                    <th>Urban</th>
-                    <th>Rural</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>Male</th>
-                    <td>
-                        <input
-                            type="number"
-                            value=${premium[0][0]}
-                            onInput=${(e) => {
-                                e.preventDefault();
-                                let new_premium = [...premium];
-                                new_premium[0][0] = e.target.value;
-                                setPremium(new_premium);
-                            }}
-                        />
-                    </td>
-                    <td>
-                        <input
-                            type="number"
-                            value=${premium[0][1]}
-                            onInput=${(e) => {
-                                e.preventDefault();
-                                let new_premium = [...premium];
-                                new_premium[0][1] = e.target.value;
-                                setPremium(new_premium);
-                            }}
-                        />
-                    </td>
-                </tr>
-                <tr>
-                    <th>Female</th>
-                    <td>
-                        <input
-                            type="number"
-                            value=${premium[1][0]}
-                            onInput=${(e) => {
-                                e.preventDefault();
-                                let new_premium = [...premium];
-                                new_premium[1][0] = e.target.value;
-                                setPremium(new_premium);
-                            }}
-                        />
-                    </td>
-                    <td>
-                        <input
-                            type="number"
-                            value=${premium[1][1]}
-                            onInput=${(e) => {
-                                e.preventDefault();
-                                let new_premium = [...premium];
-                                new_premium[1][1] = e.target.value;
-                                setPremium(new_premium);
-                            }}
-                        />
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="tables-container">
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th colspan="3">Premium Table</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>Urban</th>
+                        <th>Rural</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Male</th>
+                        <td>
+                            <input
+                                type="number"
+                                value=${premium[0][0]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_premium = [...premium];
+                                    new_premium[0][0] = e.target.value;
+                                    setPremium(new_premium);
+                                }}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                type="number"
+                                value=${premium[0][1]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_premium = [...premium];
+                                    new_premium[0][1] = e.target.value;
+                                    setPremium(new_premium);
+                                }}
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Female</th>
+                        <td>
+                            <input
+                                type="number"
+                                value=${premium[1][0]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_premium = [...premium];
+                                    new_premium[1][0] = e.target.value;
+                                    setPremium(new_premium);
+                                }}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                type="number"
+                                value=${premium[1][1]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_premium = [...premium];
+                                    new_premium[1][1] = e.target.value;
+                                    setPremium(new_premium);
+                                }}
+                            />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
-        <table>
-            <thead>
-                <tr>
-                    <th colspan="3">Loss Table</th>
-                </tr>
-                <tr>
-                    <th></th>
-                    <th>Urban</th>
-                    <th>Rural</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>Male</th>
-                    <td>
-                        <input
-                            type="number"
-                            value=${loss[0][0]}
-                            onInput=${(e) => {
-                                e.preventDefault();
-                                let new_loss = [...loss];
-                                new_loss[0][0] = e.target.value;
-                                setLoss(new_loss);
-                            }}
-                        />
-                    </td>
-                    <td>
-                        <input
-                            type="number"
-                            value=${loss[0][1]}
-                            onInput=${(e) => {
-                                e.preventDefault();
-                                let new_loss = [...loss];
-                                new_loss[0][1] = e.target.value;
-                                setLoss(new_loss);
-                            }}
-                        />
-                    </td>
-                </tr>
-                <tr>
-                    <th>Female</th>
-                    <td>
-                        <input
-                            type="number"
-                            value=${loss[1][0]}
-                            onInput=${(e) => {
-                                e.preventDefault();
-                                let new_loss = [...loss];
-                                new_loss[1][0] = e.target.value;
-                                setLoss(new_loss);
-                            }}
-                        />
-                    </td>
-                    <td>
-                        <input
-                            type="number"
-                            value=${loss[1][1]}
-                            onInput=${(e) => {
-                                e.preventDefault();
-                                let new_loss = [...loss];
-                                new_loss[1][1] = e.target.value;
-                                setLoss(new_loss);
-                            }}
-                        />
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th colspan="3">Exposure Table</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>Urban</th>
+                        <th>Rural</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Male</th>
+                        <td>
+                            <input
+                                type="number"
+                                value=${exposure[0][0]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_exposure = [...exposure];
+                                    new_exposure[0][0] = e.target.value;
+                                    setExposure(new_exposure);
+                                }}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                type="number"
+                                value=${exposure[0][1]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_exposure = [...exposure];
+                                    new_exposure[0][1] = e.target.value;
+                                    setExposure(new_exposure);
+                                }}
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Female</th>
+                        <td>
+                            <input
+                                type="number"
+                                value=${exposure[1][0]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_exposure = [...exposure];
+                                    new_exposure[1][0] = e.target.value;
+                                    setExposure(new_exposure);
+                                }}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                type="number"
+                                value=${exposure[1][1]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_exposure = [...exposure];
+                                    new_exposure[1][1] = e.target.value;
+                                    setExposure(new_exposure);
+                                }}
+                            />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
-        <table>
-            <thead>
-                <tr>
-                    <th colspan="3">Loss Ratio Table</th>
-                </tr>
-                <tr>
-                    <th></th>
-                    <th>Urban</th>
-                    <th>Rural</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>Male</th>
-                    <td>${lossRatios[0][0]}</td>
-                    <td>${lossRatios[0][1]}</td>
-                </tr>
-                <tr>
-                    <th>Female</th>
-                    <td>${lossRatios[1][0]}</td>
-                    <td>${lossRatios[1][1]}</td>
-                </tr>
-            </tbody>
-        </table>
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th colspan="3">Loss Table</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>Urban</th>
+                        <th>Rural</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Male</th>
+                        <td>
+                            <input
+                                type="number"
+                                value=${loss[0][0]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_loss = [...loss];
+                                    new_loss[0][0] = e.target.value;
+                                    setLoss(new_loss);
+                                }}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                type="number"
+                                value=${loss[0][1]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_loss = [...loss];
+                                    new_loss[0][1] = e.target.value;
+                                    setLoss(new_loss);
+                                }}
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Female</th>
+                        <td>
+                            <input
+                                type="number"
+                                value=${loss[1][0]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_loss = [...loss];
+                                    new_loss[1][0] = e.target.value;
+                                    setLoss(new_loss);
+                                }}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                type="number"
+                                value=${loss[1][1]}
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    let new_loss = [...loss];
+                                    new_loss[1][1] = e.target.value;
+                                    setLoss(new_loss);
+                                }}
+                            />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
-        <table>
-            <thead>
-                <tr>
-                    <th colspan="3">Loss Ratio Relativity Table</th>
-                </tr>
-                <tr>
-                    <th></th>
-                    <th>Urban</th>
-                    <th>Rural</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>Male</th>
-                    <td>${lossRatioRel[0][0]}</td>
-                    <td>${lossRatioRel[0][1]}</td>
-                </tr>
-                <tr>
-                    <th>Female</th>
-                    <td>${lossRatioRel[1][0]}</td>
-                    <td>${lossRatioRel[1][1]}</td>
-                </tr>
-            </tbody>
-        </table>
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Current Relativity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Male</th>
+                        <td>
+                            <input
+                                type="number"
+                                value=${currentRels.male}
+                                step=".01"
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    setCurrentRels({
+                                        ...currentRels,
+                                        male: e.target.value,
+                                    });
+                                }}
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Female</th>
+                        <td>
+                            <input
+                                type="number"
+                                value=${currentRels.female}
+                                step=".01"
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    setCurrentRels({
+                                        ...currentRels,
+                                        female: e.target.value,
+                                    });
+                                }}
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Urban</th>
+                        <td>
+                            <input
+                                type="number"
+                                value=${currentRels.urban}
+                                step=".01"
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    setCurrentRels({
+                                        ...currentRels,
+                                        urban: e.target.value,
+                                    });
+                                }}
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Rural</th>
+                        <td>
+                            <input
+                                type="number"
+                                value=${currentRels.rural}
+                                step=".01"
+                                onInput=${(e) => {
+                                    e.preventDefault();
+                                    setCurrentRels({
+                                        ...currentRels,
+                                        rural: e.target.value,
+                                    });
+                                }}
+                            />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th colspan="3">Loss Cost Table</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>Urban</th>
+                        <th>Rural</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Male</th>
+                        <td>${lossCost[0][0]}</td>
+                        <td>${lossCost[0][1]}</td>
+                    </tr>
+                    <tr>
+                        <th>Female</th>
+                        <td>${lossCost[1][0]}</td>
+                        <td>${lossCost[1][1]}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th colspan="3">Loss Ratio Table</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>Urban</th>
+                        <th>Rural</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Male</th>
+                        <td>${lossRatios[0][0]}</td>
+                        <td>${lossRatios[0][1]}</td>
+                    </tr>
+                    <tr>
+                        <th>Female</th>
+                        <td>${lossRatios[1][0]}</td>
+                        <td>${lossRatios[1][1]}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th colspan="3">Loss Ratio Relativity Table</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>Urban</th>
+                        <th>Rural</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Male</th>
+                        <td>${lossRatioRel[0][0]}</td>
+                        <td>${lossRatioRel[0][1]}</td>
+                    </tr>
+                    <tr>
+                        <th>Female</th>
+                        <td>${lossRatioRel[1][0]}</td>
+                        <td>${lossRatioRel[1][1]}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     `;
 };
 

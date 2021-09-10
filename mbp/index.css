@@ -1,0 +1,42 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+body {
+    font-family: "Inter", sans-serif;
+    font-size: 0.9rem;
+}
+
+.tables-container {
+    display: grid;
+    grid-template-columns: 45% 45%;
+    grid-gap: 1rem;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    padding: 1rem;
+}
+
+.matrix-table {
+    border: 1px solid black;
+    border-spacing: 0;
+}
+
+.matrix-table th,
+.matrix-table td {
+    border: 1px solid black;
+    padding: 0.25rem;
+    text-align: center;
+}
+
+.matrix-table th {
+    width: 80px;
+    background-color: #5b5e7d38;
+    color: #383838;
+}
+
+.matrix-table td {
+    width: 150px;
+}
+
+.matrix-table input {
+    width: calc(100% - 0.5rem);
+    text-align: center;
+}
